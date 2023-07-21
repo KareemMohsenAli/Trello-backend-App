@@ -1,10 +1,11 @@
-import auth from "../../middleware/auth.js";
+import auth, { checkId } from "../../middleware/auth.js";
 import * as userController from "./controller/user.js";
 import { Router } from "express";
 
 const router = Router();
 
-router.get("/", auth, userController.getUsers);
+
+router.get("/:userId", checkId, userController.getUsers);
 router.patch("/changepassword", auth, userController.changePassword);
 router.put("/updateuser", auth, userController.updateUser);
 router.delete("/deleteuser", auth, userController.deleteUser);

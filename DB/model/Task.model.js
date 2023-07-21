@@ -24,7 +24,8 @@ const taskSchema = new Schema(
       type:Boolean,
       default:false,
 
-    }
+    },
+   
   },
   { timestamps: true }
 );

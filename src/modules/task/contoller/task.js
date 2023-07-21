@@ -1,10 +1,9 @@
 import taskModel from "../../../../DB/model/Task.model.js";
 import userModel from "../../../../DB/model/User.model.js";
+import { deletedSchemaModel } from "../../../../DB/model/UserDeleted.model.js";
 import { asyncHandler } from "../../../utils/errorHandling.js";
-import { SoftDeletedMessage } from "../../user/controller/user.js";
 
 export const addTask = asyncHandler(async (req, res, next) => {
-  SoftDeletedMessage(req, next);
   if (req.user.isOnline === true) {
     const { title, description, deadLine, assignTo } = req.body;
     const now = new Date();
@@ -35,7 +34,6 @@ export const addTask = asyncHandler(async (req, res, next) => {
 });
 
 export const getTask = asyncHandler(async (req, res, next) => {
-  SoftDeletedMessage(req, next);
   if (req.user.isOnline === true) {
     const tasks = await taskModel
       .find({})
@@ -50,7 +48,6 @@ export const getTask = asyncHandler(async (req, res, next) => {
 });
 
 export const getAllCreatedTasks = asyncHandler(async (req, res, next) => {
-  SoftDeletedMessage(req, next);
   if (req.user.isOnline === true) {
     const tasks = await taskModel
       .find({ createdBy: req.user._id })
@@ -66,9 +63,9 @@ export const getAllCreatedTasks = asyncHandler(async (req, res, next) => {
 
 export const getAllCreatedTasksNotLogin = asyncHandler(
   async (req, res, next) => {
-    const {userId}=req.params
+    const { userId } = req.params;
     const tasks = await taskModel
-      .find({ createdBy:userId })
+      .find({ createdBy: userId })
       .populate("createdBy", "-password")
       .populate("assignTo", "-password");
     return res.json({ message: "done", tasks });
@@ -76,7 +73,6 @@ export const getAllCreatedTasksNotLogin = asyncHandler(
 );
 
 export const getAllTasksAssignToMe = asyncHandler(async (req, res, next) => {
-  SoftDeletedMessage(req, next);
   if (req.user.isOnline === true) {
     const tasks = await taskModel
       .find({ assignTo: req.user._id })
@@ -91,7 +87,6 @@ export const getAllTasksAssignToMe = asyncHandler(async (req, res, next) => {
 });
 
 export const getLateTasks = asyncHandler(async (req, res, next) => {
-  SoftDeletedMessage(req, next);
   if (req.user.isOnline === true) {
     const now = new Date();
     const tasks = await taskModel
@@ -111,7 +106,6 @@ export const getLateTasks = asyncHandler(async (req, res, next) => {
 
 export const getAllTasksAssignToAnyUser = asyncHandler(
   async (req, res, next) => {
-    SoftDeletedMessage(req, next);
     if (req.user.isOnline === true) {
       const { userId } = req.params;
       const findUser = await userModel.findById(userId);
@@ -135,7 +129,6 @@ export const getAllTasksAssignToAnyUser = asyncHandler(
 
 export const getTasksNotDoneAfterDeadline = asyncHandler(
   async (req, res, next) => {
-    SoftDeletedMessage(req, next);
     const now = new Date();
     if (req.user.isOnline === true) {
       const tasks = await taskModel.find({
@@ -158,61 +151,65 @@ export const getTasksNotDoneAfterDeadline = asyncHandler(
 );
 
 export const updateTask = asyncHandler(async (req, res, next) => {
-  SoftDeletedMessage(req, next);
-  const { taskId } = req.params;
-  const { title, description, deadLine, assignTo, status } = req.body;
-  const now = new Date();
-  const selectedDeadline = new Date(deadLine);
-  const validStatuses = ["Done", "Todo", "Doing"];
   if (req.user.isOnline === true) {
-    const task = await taskModel.findById(taskId);
-    if (!task) {
-      return next(new Error("Task not found"), { cause: 404 });
-    }
-    if (task.createdBy.toString() !== req.user._id.toString()) {
-      return next(new Error("You are not authorized to update this task"), {
-        cause: 403,
-      });
-    }
-    const findUser = await userModel.findById(assignTo);
-    if (!findUser) {
-      return next(new Error("user not found"));
-    }
-    if (isNaN(selectedDeadline.getTime())) {
-      return next(new Error("Invalid date"));
-    }
-    if (selectedDeadline <= now) {
-      return next(new Error("date must be in the future!!"));
-    }
-    if (!validStatuses.includes(status)) {
+    const { taskId } = req.params;
+    const { title, description, deadLine, assignTo, status } = req.body;
+    const now = new Date();
+    const selectedDeadline = new Date(deadLine);
+    const validStatuses = ["Done", "Todo", "Doing"];
+    if (req.user.isOnline === true) {
+      const task = await taskModel.findById(taskId);
+      if (!task) {
+        return next(new Error("Task not found"), { cause: 404 });
+      }
+      if (task.createdBy.toString() !== req.user._id.toString()) {
+        return next(new Error("You are not authorized to update this task"), {
+          cause: 403,
+        });
+      }
+      const findUser = await userModel.findById(assignTo);
+      if (!findUser) {
+        return next(new Error("user not found"));
+      }
+      if (isNaN(selectedDeadline.getTime())) {
+        return next(new Error("Invalid date"));
+      }
+      if (selectedDeadline <= now) {
+        return next(new Error("date must be in the future!!"));
+      }
+      if (!validStatuses.includes(status)) {
+        return next(
+          new Error(
+            "please enter valid status!! such as 'Done','Todo','Doing'  "
+          ),
+          { cause: 400 }
+        );
+      }
+
+      const updateUser = await taskModel.updateOne(
+        { _id: taskId },
+        {
+          title,
+          description,
+          deadLine,
+          assignTo,
+          status,
+        }
+      );
+      return res.json({ message: "user updated sucessfully!", updateUser });
+    } else {
       return next(
-        new Error(
-          "please enter valid status!! such as 'Done','Todo','Doing'  "
-        ),
-        { cause: 400 }
+        new Error("you're not allowed to update, please try again to login ")
       );
     }
-
-    const updateUser = await taskModel.updateOne(
-      { _id: taskId },
-      {
-        title,
-        description,
-        deadLine,
-        assignTo,
-        status,
-      }
-    );
-    return res.json({ message: "user updated sucessfully!", updateUser });
   } else {
     return next(
-      new Error("you're not allowed to update, please try again to login ")
+      new Error("You're not allowed to view tasks. Please try again to log in.")
     );
   }
 });
 
 export const deleteTask = asyncHandler(async (req, res, next) => {
-  SoftDeletedMessage(req, next);
   const { taskId } = req.params;
   if (req.user.isOnline === true) {
     const task = await taskModel.findById(taskId);
@@ -225,7 +222,12 @@ export const deleteTask = asyncHandler(async (req, res, next) => {
         cause: 403,
       });
     }
+
     const deleteUser = await taskModel.findByIdAndRemove(taskId);
+    const deletedUserSchema = new deletedSchemaModel({
+      users: [deleteUser.createdBy],
+    });
+    await deletedUserSchema.save();
     return res.json({ message: "user deleted sucessfully!", deleteUser });
   } else {
     return next(
@@ -233,3 +235,4 @@ export const deleteTask = asyncHandler(async (req, res, next) => {
     );
   }
 });
+//64b305310433707bb3de32a5

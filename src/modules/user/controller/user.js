@@ -1,20 +1,14 @@
 import userModel from "../../../../DB/model/User.model.js";
 import { asyncHandler } from "../../../utils/errorHandling.js";
 import bcrypt from "bcryptjs";
-///////////////////////////////////////////i made this function becuase i want to reuse it in all my controllers
-export const SoftDeletedMessage = (req, next) => {
-  if (req.user.isDeleted === true) {
-    return next(new Error("this email is deleted ,please login again."));
-  }
-};
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 export const getUsers = asyncHandler(async (req, res) => {
   const users = await userModel.find();
   return res.json({ message: "Done", users });
 });
 export const changePassword = asyncHandler(async (req, res, next) => {
+  
   const { oldPassword, newPassword, cPassword } = req.body;
-  SoftDeletedMessage(req, next);
   if (req.user.isOnline === true) {
     const isPasswordValid = await bcrypt.compare(
       oldPassword,
@@ -46,10 +40,6 @@ export const changePassword = asyncHandler(async (req, res, next) => {
 
 export const updateUser = asyncHandler(async (req, res, next) => {
   const { userName, age, phone } = req.body;
-  //   if (req.user.isDeleted === true) {
-  //     return next(new Error("this email is deleted please login again."));
-  //   }
-  SoftDeletedMessage(req, next);
   if (req.user.isOnline === true) {
     const updateUser = await userModel.updateOne(
       { _id: req.user._id },
@@ -64,7 +54,6 @@ export const updateUser = asyncHandler(async (req, res, next) => {
 });
 
 export const deleteUser = asyncHandler(async (req, res, next) => {
-  SoftDeletedMessage(req, next, "this email is deleted please login again..");
   if (req.user.isOnline === true && req.user.isDeleted === false) {
     const deleteUser = await userModel.deleteOne(req.user._id);
     return res.json({ message: "user deleted sucessfully!", deleteUser });
@@ -76,7 +65,6 @@ export const deleteUser = asyncHandler(async (req, res, next) => {
 });
 
 export const logOut = asyncHandler(async (req, res, next) => {
-  SoftDeletedMessage(req, next);
   if (req.user.isOnline === true) {
     const isNotLoggedIn = await userModel.updateOne(
       { _id: req.user._id },

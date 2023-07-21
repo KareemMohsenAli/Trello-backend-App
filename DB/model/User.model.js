@@ -2,6 +2,7 @@ import { Schema, model } from "mongoose";
 
 const userSchema = new Schema(
   {
+    
     userName: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
@@ -12,7 +13,12 @@ const userSchema = new Schema(
     isOnline: { type: Boolean, default: false },
     isDeleted: { type: Boolean, default: false },
     phone:String,
+    comfirmEmail:{
+      type:Boolean,
+      default:false,
+    }
   },
+  
   { timestamps: true }
 );
 
