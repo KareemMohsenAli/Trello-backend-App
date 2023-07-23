@@ -6,10 +6,18 @@ import {
   emailVerificationTamplete,
   sendEmail,
 } from "../../../utils/SendEmail..js";
-
 export const signup = asyncHandler(async (req, res, next) => {  
   const { firstName, lastName, userName, email, cPassword, password } =
     req.body;
+    // const {error ,value} = signUp.validate(req.body,{ abortEarly: false })
+    // if(error){
+    //   const validaionErrors=error.details.reduce((acc,curr)=>{
+    //     acc[curr.path[0]] = curr.message;
+    //     return acc
+    //   },{})
+    //   return res.status(400).json({ errors: validaionErrors });
+    // }
+    
   if (cPassword !== password) {
     return next(new Error("password doesnt match !!"), { cause: 409 });
   }
@@ -105,6 +113,14 @@ export const unSubscribe = asyncHandler(async (req, res, next) => {
 
 export const login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
+  // const {error ,value} = logIn.validate(req.body,{ abortEarly: false })
+  // if(error){
+  //   const validaionErrors=error.details.reduce((acc,curr)=>{
+  //     acc[curr.path] = curr.message
+  //     return acc
+  //   },{})
+  //   return res.status(400).json({ errors: validaionErrors });
+  // }
   const user = await userModel.findOne({ email });
   if (!user) {
     return next(new Error("In-valid email"), { cause: 404 });

@@ -7,7 +7,6 @@ export const getUsers = asyncHandler(async (req, res) => {
   return res.json({ message: "Done", users });
 });
 export const changePassword = asyncHandler(async (req, res, next) => {
-  
   const { oldPassword, newPassword, cPassword } = req.body;
   if (req.user.isOnline === true) {
     const isPasswordValid = await bcrypt.compare(

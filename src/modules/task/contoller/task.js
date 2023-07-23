@@ -1,6 +1,5 @@
 import taskModel from "../../../../DB/model/Task.model.js";
 import userModel from "../../../../DB/model/User.model.js";
-import { deletedSchemaModel } from "../../../../DB/model/UserDeleted.model.js";
 import { asyncHandler } from "../../../utils/errorHandling.js";
 
 export const addTask = asyncHandler(async (req, res, next) => {
@@ -213,7 +212,6 @@ export const deleteTask = asyncHandler(async (req, res, next) => {
   const { taskId } = req.params;
   if (req.user.isOnline === true) {
     const task = await taskModel.findById(taskId);
-
     if (!task) {
       return next(new Error("Task not found"), { cause: 404 });
     }
@@ -222,12 +220,7 @@ export const deleteTask = asyncHandler(async (req, res, next) => {
         cause: 403,
       });
     }
-
     const deleteUser = await taskModel.findByIdAndRemove(taskId);
-    const deletedUserSchema = new deletedSchemaModel({
-      users: [deleteUser.createdBy],
-    });
-    await deletedUserSchema.save();
     return res.json({ message: "user deleted sucessfully!", deleteUser });
   } else {
     return next(
@@ -235,4 +228,3 @@ export const deleteTask = asyncHandler(async (req, res, next) => {
     );
   }
 });
-//64b305310433707bb3de32a5

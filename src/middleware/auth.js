@@ -2,7 +2,8 @@ import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/errorHandling.js";
 import userModel from "../../DB/model/User.model.js";
 
-const auth = asyncHandler(async (req, res, next) => {
+const auth = asyncHandler(
+  async (req, res, next) => {
   const { authorization } = req.headers;
   // console.log(authorization)
 
@@ -32,13 +33,4 @@ const auth = asyncHandler(async (req, res, next) => {
   req.user = user;
   return next();
 });
-
-export const checkId = async (req, res, next) => {
-  const { userId } = req.params;
-  const findUser = await userModel.findById(userId);
-  if (!findUser) {
-    return next(new Error("user not found"));
-  }
-  return res.json("success u can enter the system");
-};
 export default auth;
